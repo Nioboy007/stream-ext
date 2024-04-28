@@ -1,7 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
+import os
 
-def extract_streams(url):
+def extract_video_streams(url):
     try:
         # Send a GET request to the URL
         response = requests.get(url)
@@ -11,16 +12,21 @@ def extract_streams(url):
             # Parse HTML content
             soup = BeautifulSoup(response.content, 'html.parser')
             
-            # Find all the elements containing the streams
-            stream_elements = soup.find_all('a', href=True)
+            # Find all the elements containing video streams
+            video_elements = soup.find_all('video')
             
-            # Extract the links
-            stream_links = [link['href'] for link in stream_elements]
-            
-            # Generate downloadable links if needed
-            downloadable_links = [link if link.startswith('http') else f"{url}/{link}" for link in stream_links]
-            
-            return downloadable_links
+            # Extract video names and video source links
+            video_info = []
+            for video in video_elements:
+                # Extract video name
+                video_name = video.get('title', 'Video Name not available')
+                
+                # Extract video source link
+                video_src = video.find('source').get('src')
+                
+                video_info.append({'name': video_name, 'link': video_src})
+                
+            return video_info
         else:
             print("Failed to fetch the page.")
             return []
@@ -29,20 +35,22 @@ def extract_streams(url):
         return []
 
 def main():
-    print("Welcome to the Stream Extractor!")
+    print("Welcome to the Video Stream Extractor!")
     while True:
-        url = input("Please enter the URL of the website with streams (or 'quit' to exit): ")
+        url = input("Please enter the URL of the website with video streams (or 'quit' to exit): ")
         if url.lower() == 'quit':
             print("Goodbye!")
             break
         else:
-            downloadable_links = extract_streams(url)
-            if downloadable_links:
-                print("Downloadable Links:")
-                for link in downloadable_links:
-                    print(link)
+            video_streams = extract_video_streams(url)
+            if video_streams:
+                print("Video Streams:")
+                for video in video_streams:
+                    print(f"Name: {video['name']}")
+                    print(f"Link: {video['link']}")
+                    print("\n")
             else:
-                print("No streams found or unable to extract streams.")
+                print("No video streams found or unable to extract video streams.")
 
 if __name__ == "__main__":
     main()
